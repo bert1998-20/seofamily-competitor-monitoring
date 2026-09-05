@@ -35,6 +35,39 @@ st.set_page_config(
 load_dotenv()
 
 # =========================
+# CONFIG - API KEYS (STRICT SECRETS - NO FALLBACK)
+# =========================
+try:
+    AHREFS_API_KEY = st.secrets["AHREFS_API_KEY"]
+    SERPAPI_KEY = st.secrets["SERPAPI_KEY"]
+except KeyError as e:
+    st.error(f"❌ Missing required secret: {str(e)}")
+    st.info("Please add the following to your .streamlit/secrets.toml file:")
+    st.code("""
+AHREFS_API_KEY = "your_ahrefs_api_key"
+SERPAPI_KEY = "your_serpapi_key"
+
+[gcp_service_account]
+type = "service_account"
+project_id = "your_project_id"
+private_key_id = "your_private_key_id"
+private_key = "-----BEGIN PRIVATE KEY-----\\nyour_private_key\\n-----END PRIVATE KEY-----\\n"
+client_email = "your_service_account_email"
+client_id = "your_client_id"
+auth_uri = "https://accounts.google.com/o/oauth2/auth"
+token_uri = "https://oauth2.googleapis.com/token"
+auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
+client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/your_service_account_email"
+universe_domain = "googleapis.com"
+""")
+    st.stop()
+
+SCOPES = [
+    "https://www.googleapis.com/auth/webmasters.readonly",
+    "https://www.googleapis.com/auth/analytics.readonly"
+]
+
+# =========================
 # CSS (COMPLETE)
 # =========================
 st.markdown("""
@@ -862,22 +895,6 @@ h1, h2, h3, h4, h5, h6, p, label, div {
 """, unsafe_allow_html=True)
 
 # =========================
-# CONFIG - API KEYS (READ FROM SECRETS)
-# =========================
-# Try to get API keys from secrets first, fallback to hardcoded
-try:
-    AHREFS_API_KEY = st.secrets.get("AHREFS_API_KEY", "TK4LhJ3T06H_Zy6ghG9b4n7lz82PFZVvhR3Fp3yd")
-    SERPAPI_KEY = st.secrets.get("SERPAPI_KEY", "sk_mW3LukviteitbSKMrzFT0Zdwv2MHfO1Fe7KCaK5B")
-except:
-    AHREFS_API_KEY = "TK4LhJ3T06H_Zy6ghG9b4n7lz82PFZVvhR3Fp3yd"
-    SERPAPI_KEY = "sk_mW3LukviteitbSKMrzFT0Zdwv2MHfO1Fe7KCaK5B"
-
-SCOPES = [
-    "https://www.googleapis.com/auth/webmasters.readonly",
-    "https://www.googleapis.com/auth/analytics.readonly"
-]
-
-# =========================
 # SITE CONFIGURATION (COMPLETE)
 # =========================
 SITES = {
@@ -923,7 +940,7 @@ SITES = {
         "priority": False
     },
     "juan365.net.ph": {
-        "gsc_url": "https://juan365.net.ph/",
+        "gsc_url": "https://www.juan365.net.ph/",
         "ga4_property_id": "508243783",
         "category": "Juan365",
         "ahrefs_target": "juan365.net.ph",
@@ -1070,7 +1087,7 @@ SITES = {
     },
     "123gogames.org": {
         "gsc_url": "https://123gogames.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "123gogames.org",
         "display_name": "123gogames.org",
@@ -1078,7 +1095,7 @@ SITES = {
     },
     "789bingo.org": {
         "gsc_url": "https://789bingo.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "789bingo.org",
         "display_name": "789bingo.org",
@@ -1094,7 +1111,7 @@ SITES = {
     },
     "gg-panalo.org": {
         "gsc_url": "https://gg-panalo.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "gg-panalo.org",
         "display_name": "gg-panalo.org",
@@ -1126,7 +1143,7 @@ SITES = {
     },
     "s5arena.org": {
         "gsc_url": "https://s5arena.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "s5arena.org",
         "display_name": "s5arena.org",
@@ -1152,7 +1169,7 @@ CATEGORIES = {
 SITE_METRICS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2lub4F_fMu-V_F6EMlqJOHpPIpRWhsKxgpjQOBkkTsppku31ZIIu-0yfWGFo7WVSek2xMYMd_lsop/pub?output=csv"
 
 # =========================
-# AHREFS API FUNCTIONS - FIXED ENDPOINTS
+# AHREFS API FUNCTIONS
 # =========================
 @st.cache_data(ttl=86400)
 def ahrefs_api_request(endpoint, params):
@@ -1889,8 +1906,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
                         data["ahrefs_backlinks_df"] = pd.DataFrame(inner_data)
                         data["has_data"] = True
         elif bl_error:
-            data["ahrefs_error"] = True
-            if check_ahrefs_quota_error(bl_error):
+            data["ahrefs_error"] = True            if check_ahrefs_quota_error(bl_error):
                 data["ahrefs_error_message"] = "QUOTA_EXHAUSTED"
             else:
                 data["ahrefs_error_message"] += f" BL: {bl_error[:50]}"
