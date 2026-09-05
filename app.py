@@ -1087,7 +1087,7 @@ SITES = {
     },
     "123gogames.org": {
         "gsc_url": "https://123gogames.org/",
-        "ga4_property_id": "",  # No GA4 ID available
+        "ga4_property_id": "",
         "category": "Competitor Legal",
         "ahrefs_target": "123gogames.org",
         "display_name": "123gogames.org",
@@ -1095,7 +1095,7 @@ SITES = {
     },
     "789bingo.org": {
         "gsc_url": "https://789bingo.org/",
-        "ga4_property_id": "",  # No GA4 ID available
+        "ga4_property_id": "",
         "category": "Competitor Legal",
         "ahrefs_target": "789bingo.org",
         "display_name": "789bingo.org",
@@ -1111,7 +1111,7 @@ SITES = {
     },
     "gg-panalo.org": {
         "gsc_url": "https://gg-panalo.org/",
-        "ga4_property_id": "",  # No GA4 ID available
+        "ga4_property_id": "",
         "category": "Competitor Legal",
         "ahrefs_target": "gg-panalo.org",
         "display_name": "gg-panalo.org",
@@ -1143,7 +1143,7 @@ SITES = {
     },
     "s5arena.org": {
         "gsc_url": "https://s5arena.org/",
-        "ga4_property_id": "",  # No GA4 ID available
+        "ga4_property_id": "",
         "category": "Competitor Legal",
         "ahrefs_target": "s5arena.org",
         "display_name": "s5arena.org",
@@ -1790,7 +1790,7 @@ def get_metrics_data():
         return pd.DataFrame()
 
 # =========================
-# LOAD DATA FOR SITES
+# LOAD DATA FOR SITES - FIXED
 # =========================
 def load_site_data(site_key, site_config, load_ahrefs=True):
     """Load all data for a single site with optional Ahrefs data"""
@@ -1886,7 +1886,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] = dr_error[:100]
         
-        # Backlinks
+        # Backlinks - FIXED
         ahrefs_backlinks_data, bl_error = get_ahrefs_backlinks(ahrefs_target)
         if ahrefs_backlinks_data:
             if isinstance(ahrefs_backlinks_data, dict):
@@ -1906,12 +1906,13 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
                         data["ahrefs_backlinks_df"] = pd.DataFrame(inner_data)
                         data["has_data"] = True
         elif bl_error:
-            data["ahrefs_error"] = True            if check_ahrefs_quota_error(bl_error):
+            data["ahrefs_error"] = True
+            if check_ahrefs_quota_error(bl_error):
                 data["ahrefs_error_message"] = "QUOTA_EXHAUSTED"
             else:
                 data["ahrefs_error_message"] += f" BL: {bl_error[:50]}"
         
-        # Referring Domains
+        # Referring Domains - FIXED
         ahrefs_refdomains_data, rd_error = get_ahrefs_refdomains(ahrefs_target)
         if ahrefs_refdomains_data:
             if isinstance(ahrefs_refdomains_data, dict):
@@ -1937,7 +1938,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] += f" RD: {rd_error[:50]}"
         
-        # Organic Keywords
+        # Organic Keywords - FIXED
         ahrefs_keywords_data, kw_error = get_ahrefs_organic_keywords(ahrefs_target)
         if ahrefs_keywords_data:
             if isinstance(ahrefs_keywords_data, dict):
