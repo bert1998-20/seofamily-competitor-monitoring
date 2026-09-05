@@ -862,10 +862,15 @@ h1, h2, h3, h4, h5, h6, p, label, div {
 """, unsafe_allow_html=True)
 
 # =========================
-# CONFIG - YOUR API KEYS (UPDATED)
+# CONFIG - API KEYS (READ FROM SECRETS)
 # =========================
-AHREFS_API_KEY = "TK4LhJ3T06H_Zy6ghG9b4n7lz82PFZVvhR3Fp3yd"
-SERPAPI_KEY = "sk_mW3LukviteitbSKMrzFT0Zdwv2MHfO1Fe7KCaK5B"
+# Try to get API keys from secrets first, fallback to hardcoded
+try:
+    AHREFS_API_KEY = st.secrets.get("AHREFS_API_KEY", "TK4LhJ3T06H_Zy6ghG9b4n7lz82PFZVvhR3Fp3yd")
+    SERPAPI_KEY = st.secrets.get("SERPAPI_KEY", "sk_mW3LukviteitbSKMrzFT0Zdwv2MHfO1Fe7KCaK5B")
+except:
+    AHREFS_API_KEY = "TK4LhJ3T06H_Zy6ghG9b4n7lz82PFZVvhR3Fp3yd"
+    SERPAPI_KEY = "sk_mW3LukviteitbSKMrzFT0Zdwv2MHfO1Fe7KCaK5B"
 
 SCOPES = [
     "https://www.googleapis.com/auth/webmasters.readonly",
@@ -1147,7 +1152,7 @@ CATEGORIES = {
 SITE_METRICS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2lub4F_fMu-V_F6EMlqJOHpPIpRWhsKxgpjQOBkkTsppku31ZIIu-0yfWGFo7WVSek2xMYMd_lsop/pub?output=csv"
 
 # =========================
-# AHREFS API FUNCTIONS - FIXED ENDPOINTS (NO QUOTA CHECK)
+# AHREFS API FUNCTIONS - FIXED ENDPOINTS
 # =========================
 @st.cache_data(ttl=86400)
 def ahrefs_api_request(endpoint, params):
@@ -1195,7 +1200,7 @@ def ahrefs_api_request(endpoint, params):
 
 @st.cache_data(ttl=86400)
 def get_ahrefs_domain_rating(target):
-    """Get Domain Rating (DR) for a target - FIXED ENDPOINT"""
+    """Get Domain Rating (DR) for a target"""
     params = {
         "target": target,
         "date": date.today().strftime("%Y-%m-%d")
@@ -1204,7 +1209,7 @@ def get_ahrefs_domain_rating(target):
 
 @st.cache_data(ttl=86400)
 def get_ahrefs_backlinks(target):
-    """Get backlinks for a target - FIXED ENDPOINT"""
+    """Get backlinks for a target"""
     params = {
         "target": target,
         "mode": "domain",
@@ -1215,7 +1220,7 @@ def get_ahrefs_backlinks(target):
 
 @st.cache_data(ttl=86400)
 def get_ahrefs_refdomains(target):
-    """Get referring domains for a target - FIXED ENDPOINT"""
+    """Get referring domains for a target"""
     params = {
         "target": target,
         "mode": "domain",
@@ -1226,7 +1231,7 @@ def get_ahrefs_refdomains(target):
 
 @st.cache_data(ttl=86400)
 def get_ahrefs_organic_keywords(target):
-    """Get organic keywords for a target - FIXED ENDPOINT"""
+    """Get organic keywords for a target"""
     params = {
         "target": target,
         "mode": "domain",
@@ -1238,18 +1243,30 @@ def get_ahrefs_organic_keywords(target):
     return ahrefs_api_request("site-explorer/organic-keywords", params)
 
 # =========================
-# AUTH
+# AUTH - FIXED TO READ FROM SECRETS
 # =========================
 @st.cache_resource
 def google_login():
     try:
+        # Check if secrets exist
+        if "gcp_service_account" not in st.secrets:
+            st.sidebar.error("❌ GCP Service Account not found in secrets. Please check your secrets.toml file.")
+            st.sidebar.info("📝 Make sure secrets.toml has a [gcp_service_account] section with all required fields.")
+            return None
+        
         creds = service_account.Credentials.from_service_account_info(
             st.secrets["gcp_service_account"],
             scopes=SCOPES
         )
+        st.sidebar.success("✅ GCP Authentication Successful!")
         return creds
+    except KeyError as e:
+        st.sidebar.error(f"❌ GCP Auth Error: Missing secret key: {str(e)}")
+        st.sidebar.info("📝 Check your secrets.toml file has all required fields for gcp_service_account")
+        return None
     except Exception as e:
         st.sidebar.error(f"❌ GCP Auth Error: {str(e)}")
+        st.sidebar.info("📝 Make sure your service account has the correct permissions")
         return None
 
 creds = google_login()
@@ -1480,7 +1497,7 @@ GA4_END_DATE = "today"
 
 st.sidebar.markdown("---")
 
-# API Status (Simplified - no quota check)
+# API Status
 st.sidebar.markdown('<div class="sidebar-label">🔑 API Status</div>', unsafe_allow_html=True)
 
 if AHREFS_API_KEY:
@@ -1756,7 +1773,7 @@ def get_metrics_data():
         return pd.DataFrame()
 
 # =========================
-# LOAD DATA FOR SITES - FIXED PARSING
+# LOAD DATA FOR SITES
 # =========================
 def load_site_data(site_key, site_config, load_ahrefs=True):
     """Load all data for a single site with optional Ahrefs data"""
@@ -1822,9 +1839,9 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
     except Exception as e:
         data["ga4_error"] = True
     
-    # Ahrefs Data - FIXED PARSING
+    # Ahrefs Data
     if load_ahrefs and AHREFS_API_KEY:
-        # Domain Rating - FIXED PARSING
+        # Domain Rating
         ahrefs_dr_data, dr_error = get_ahrefs_domain_rating(ahrefs_target)
         if ahrefs_dr_data:
             if isinstance(ahrefs_dr_data, dict):
@@ -1852,7 +1869,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] = dr_error[:100]
         
-        # Backlinks - FIXED PARSING
+        # Backlinks
         ahrefs_backlinks_data, bl_error = get_ahrefs_backlinks(ahrefs_target)
         if ahrefs_backlinks_data:
             if isinstance(ahrefs_backlinks_data, dict):
@@ -1878,7 +1895,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] += f" BL: {bl_error[:50]}"
         
-        # Referring Domains - FIXED PARSING
+        # Referring Domains
         ahrefs_refdomains_data, rd_error = get_ahrefs_refdomains(ahrefs_target)
         if ahrefs_refdomains_data:
             if isinstance(ahrefs_refdomains_data, dict):
@@ -1904,7 +1921,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] += f" RD: {rd_error[:50]}"
         
-        # Organic Keywords - FIXED PARSING
+        # Organic Keywords
         ahrefs_keywords_data, kw_error = get_ahrefs_organic_keywords(ahrefs_target)
         if ahrefs_keywords_data:
             if isinstance(ahrefs_keywords_data, dict):
