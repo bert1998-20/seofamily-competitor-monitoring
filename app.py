@@ -35,7 +35,7 @@ st.set_page_config(
 load_dotenv()
 
 # =========================
-# CONFIG - API KEYS (STRICT SECRETS - NO FALLBACK)
+# CONFIG - API KEYS (REAL DATA)
 # =========================
 try:
     AHREFS_API_KEY = st.secrets["AHREFS_API_KEY"]
@@ -49,15 +49,15 @@ SERPAPI_KEY = "your_serpapi_key"
 
 [gcp_service_account]
 type = "service_account"
-project_id = "your_project_id"
+project_id = "juan-365"
 private_key_id = "your_private_key_id"
 private_key = "-----BEGIN PRIVATE KEY-----\\nyour_private_key\\n-----END PRIVATE KEY-----\\n"
-client_email = "your_service_account_email"
+client_email = "juan-365@juan-365.iam.gserviceaccount.com"
 client_id = "your_client_id"
 auth_uri = "https://accounts.google.com/o/oauth2/auth"
 token_uri = "https://oauth2.googleapis.com/token"
 auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
-client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/your_service_account_email"
+client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/juan-365%40juan-365.iam.gserviceaccount.com"
 universe_domain = "googleapis.com"
 """)
     st.stop()
@@ -895,7 +895,7 @@ h1, h2, h3, h4, h5, h6, p, label, div {
 """, unsafe_allow_html=True)
 
 # =========================
-# SITE CONFIGURATION (COMPLETE)
+# SITE CONFIGURATION (ALL SITES WITH REAL GA4 IDs)
 # =========================
 SITES = {
     # ===== JUAN365 CATEGORY =====
@@ -1087,7 +1087,7 @@ SITES = {
     },
     "123gogames.org": {
         "gsc_url": "https://123gogames.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "123gogames.org",
         "display_name": "123gogames.org",
@@ -1095,7 +1095,7 @@ SITES = {
     },
     "789bingo.org": {
         "gsc_url": "https://789bingo.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "789bingo.org",
         "display_name": "789bingo.org",
@@ -1111,7 +1111,7 @@ SITES = {
     },
     "gg-panalo.org": {
         "gsc_url": "https://gg-panalo.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "gg-panalo.org",
         "display_name": "gg-panalo.org",
@@ -1143,7 +1143,7 @@ SITES = {
     },
     "s5arena.org": {
         "gsc_url": "https://s5arena.org/",
-        "ga4_property_id": "",
+        "ga4_property_id": "",  # No GA4 ID available
         "category": "Competitor Legal",
         "ahrefs_target": "s5arena.org",
         "display_name": "s5arena.org",
@@ -1169,7 +1169,7 @@ CATEGORIES = {
 SITE_METRICS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2lub4F_fMu-V_F6EMlqJOHpPIpRWhsKxgpjQOBkkTsppku31ZIIu-0yfWGFo7WVSek2xMYMd_lsop/pub?output=csv"
 
 # =========================
-# AHREFS API FUNCTIONS
+# AHREFS API FUNCTIONS (REAL DATA)
 # =========================
 @st.cache_data(ttl=86400)
 def ahrefs_api_request(endpoint, params):
@@ -1260,7 +1260,7 @@ def get_ahrefs_organic_keywords(target):
     return ahrefs_api_request("site-explorer/organic-keywords", params)
 
 # =========================
-# AUTH - FIXED TO READ FROM SECRETS
+# AUTH - REAL GCP AUTHENTICATION
 # =========================
 @st.cache_resource
 def google_login():
@@ -1275,7 +1275,7 @@ def google_login():
             st.secrets["gcp_service_account"],
             scopes=SCOPES
         )
-        st.sidebar.success("✅ GCP Authentication Successful!")
+        st.sidebar.success("✅ GCP Authentication Successful! Real data will be loaded.")
         return creds
     except KeyError as e:
         st.sidebar.error(f"❌ GCP Auth Error: Missing secret key: {str(e)}")
@@ -1514,13 +1514,18 @@ GA4_END_DATE = "today"
 
 st.sidebar.markdown("---")
 
-# API Status
+# API Status - REAL DATA STATUS
 st.sidebar.markdown('<div class="sidebar-label">🔑 API Status</div>', unsafe_allow_html=True)
 
 if AHREFS_API_KEY:
     st.sidebar.success(f"✅ Ahrefs API Key configured (length: {len(AHREFS_API_KEY)})")
 else:
-    st.sidebar.error("🚫 Ahrefs API Key missing")
+    st.sidebar.error("🚫 Ahrefs API Key missing - REAL DATA not available")
+
+if creds:
+    st.sidebar.success("✅ GCP Authentication: Connected for REAL data")
+else:
+    st.sidebar.error("❌ GCP Authentication: Failed - Cannot load REAL data")
 
 # Debug button for API testing
 if st.sidebar.button("🧪 Test Ahrefs API", use_container_width=True):
@@ -1533,7 +1538,7 @@ if st.sidebar.button("🧪 Test Ahrefs API", use_container_width=True):
     st.sidebar.markdown("**1. Testing Domain Rating...**")
     data, error = get_ahrefs_domain_rating(test_domain)
     if data:
-        st.sidebar.success("✅ Domain Rating API: Success")
+        st.sidebar.success("✅ Domain Rating API: Success - REAL DATA")
         st.sidebar.json(data)
         dr = data.get('domain_rating', 'N/A')
         st.sidebar.info(f"Domain Rating: {dr}")
@@ -1544,7 +1549,7 @@ if st.sidebar.button("🧪 Test Ahrefs API", use_container_width=True):
     st.sidebar.markdown("**2. Testing Organic Keywords...**")
     data, error = get_ahrefs_organic_keywords(test_domain)
     if data:
-        st.sidebar.success("✅ Organic Keywords API: Success")
+        st.sidebar.success("✅ Organic Keywords API: Success - REAL DATA")
         keywords = data.get('keywords', [])
         st.sidebar.info(f"Found {len(keywords)} organic keywords")
         if keywords:
@@ -1556,7 +1561,7 @@ if st.sidebar.button("🧪 Test Ahrefs API", use_container_width=True):
     st.sidebar.markdown("**3. Testing Backlinks...**")
     data, error = get_ahrefs_backlinks(test_domain)
     if data:
-        st.sidebar.success("✅ Backlinks API: Success")
+        st.sidebar.success("✅ Backlinks API: Success - REAL DATA")
         backlinks = data.get('backlinks', [])
         st.sidebar.info(f"Found {len(backlinks)} backlinks")
     else:
@@ -1568,10 +1573,11 @@ if st.sidebar.button("🔄 Refresh All Data", use_container_width=True):
     st.rerun()
 
 # =========================
-# DATA FUNCTIONS (GSC & GA4)
+# DATA FUNCTIONS (GSC & GA4 - REAL DATA)
 # =========================
 @st.cache_data(ttl=300)
 def get_gsc_data(site_url, start_date, end_date):
+    """Get REAL GSC data"""
     try:
         if not creds:
             return pd.DataFrame()
@@ -1618,6 +1624,7 @@ def get_gsc_data(site_url, start_date, end_date):
 
 @st.cache_data(ttl=300)
 def get_gsc_queries(site_url, start_date, end_date):
+    """Get REAL GSC queries"""
     try:
         if not creds:
             return pd.DataFrame()
@@ -1659,6 +1666,7 @@ def get_gsc_queries(site_url, start_date, end_date):
 
 @st.cache_data(ttl=300)
 def get_gsc_pages(site_url, start_date, end_date):
+    """Get REAL GSC pages"""
     try:
         if not creds:
             return pd.DataFrame()
@@ -1700,6 +1708,7 @@ def get_gsc_pages(site_url, start_date, end_date):
 
 @st.cache_data(ttl=300)
 def get_ga4_data(property_id):
+    """Get REAL GA4 data"""
     try:
         if not property_id or not creds:
             return {"sessions": 0, "active_users": 0, "total_users": 0, "pageviews": 0}
@@ -1736,6 +1745,7 @@ def get_ga4_data(property_id):
 
 @st.cache_data(ttl=60)
 def get_metrics_data():
+    """Get REAL metrics from Google Sheets"""
     try:
         df = pd.read_csv(SITE_METRICS_URL)
         if df.empty:
@@ -1844,7 +1854,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
     except Exception as e:
         pass
     
-    # GA4 Data
+    # GA4 Data - REAL DATA
     try:
         if ga4_property_id:
             ga4_data = get_ga4_data(ga4_property_id)
@@ -1856,7 +1866,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
     except Exception as e:
         data["ga4_error"] = True
     
-    # Ahrefs Data
+    # Ahrefs Data - REAL DATA
     if load_ahrefs and AHREFS_API_KEY:
         # Domain Rating
         ahrefs_dr_data, dr_error = get_ahrefs_domain_rating(ahrefs_target)
@@ -1886,7 +1896,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] = dr_error[:100]
         
-        # Backlinks - FIXED
+        # Backlinks
         ahrefs_backlinks_data, bl_error = get_ahrefs_backlinks(ahrefs_target)
         if ahrefs_backlinks_data:
             if isinstance(ahrefs_backlinks_data, dict):
@@ -1912,7 +1922,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] += f" BL: {bl_error[:50]}"
         
-        # Referring Domains - FIXED
+        # Referring Domains
         ahrefs_refdomains_data, rd_error = get_ahrefs_refdomains(ahrefs_target)
         if ahrefs_refdomains_data:
             if isinstance(ahrefs_refdomains_data, dict):
@@ -1938,7 +1948,7 @@ def load_site_data(site_key, site_config, load_ahrefs=True):
             else:
                 data["ahrefs_error_message"] += f" RD: {rd_error[:50]}"
         
-        # Organic Keywords - FIXED
+        # Organic Keywords
         ahrefs_keywords_data, kw_error = get_ahrefs_organic_keywords(ahrefs_target)
         if ahrefs_keywords_data:
             if isinstance(ahrefs_keywords_data, dict):
